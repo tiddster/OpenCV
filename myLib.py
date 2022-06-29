@@ -1,24 +1,27 @@
 import cv2
 import numpy as np
+
 """
 用于opencv一个窗口展示多个图像
 输入：图像的组合数组，规模，对应标签
 输出：一整个合并图像，可以直接用cv2.imshow("xx",xx)输出
 """
-def stackImages(imgArray,scale = 0.5,lables=[]):
+
+
+def stackImages(imgArray, scale=0.5, lables=[]):
     rows = len(imgArray)
     cols = len(imgArray[0])
     rowsAvailable = isinstance(imgArray[0], list)
     width = imgArray[0][0].shape[1]
     height = imgArray[0][0].shape[0]
     if rowsAvailable:
-        for x in range ( 0, rows):
+        for x in range(0, rows):
             for y in range(0, cols):
                 imgArray[x][y] = cv2.resize(imgArray[x][y], (0, 0), None, scale, scale)
-                if len(imgArray[x][y].shape) == 2: imgArray[x][y]= cv2.cvtColor( imgArray[x][y], cv2.COLOR_GRAY2BGR)
+                if len(imgArray[x][y].shape) == 2: imgArray[x][y] = cv2.cvtColor(imgArray[x][y], cv2.COLOR_GRAY2BGR)
         imageBlank = np.zeros((height, width, 3), np.uint8)
-        hor = [imageBlank]*rows
-        hor_con = [imageBlank]*rows
+        hor = [imageBlank] * rows
+        hor_con = [imageBlank] * rows
         for x in range(0, rows):
             hor[x] = np.hstack(imgArray[x])
             hor_con[x] = np.concatenate(imgArray[x])
@@ -28,18 +31,22 @@ def stackImages(imgArray,scale = 0.5,lables=[]):
         for x in range(0, rows):
             imgArray[x] = cv2.resize(imgArray[x], (0, 0), None, scale, scale)
             if len(imgArray[x].shape) == 2: imgArray[x] = cv2.cvtColor(imgArray[x], cv2.COLOR_GRAY2BGR)
-        hor= np.hstack(imgArray)
-        hor_con= np.concatenate(imgArray)
+        hor = np.hstack(imgArray)
+        hor_con = np.concatenate(imgArray)
         ver = hor
     if len(lables) != 0:
-        eachImgWidth= int(ver.shape[1] / cols)
+        eachImgWidth = int(ver.shape[1] / cols)
         eachImgHeight = int(ver.shape[0] / rows)
         print(eachImgHeight)
         for d in range(0, rows):
-            for c in range (0,cols):
-                cv2.rectangle(ver,(c*eachImgWidth,eachImgHeight*d),(c*eachImgWidth+len(lables[d])*13+27,30+eachImgHeight*d),(255,255,255),cv2.FILLED)
-                cv2.putText(ver,lables[d],(eachImgWidth*c+10,eachImgHeight*d+20),cv2.FONT_HERSHEY_COMPLEX,0.7,(255,0,255),2)
+            for c in range(0, cols):
+                cv2.rectangle(ver, (c * eachImgWidth, eachImgHeight * d),
+                              (c * eachImgWidth + len(lables[d]) * 13 + 27, 30 + eachImgHeight * d), (255, 255, 255),
+                              cv2.FILLED)
+                cv2.putText(ver, lables[d], (eachImgWidth * c + 10, eachImgHeight * d + 20), cv2.FONT_HERSHEY_COMPLEX,
+                            0.7, (255, 0, 255), 2)
     return ver
+
 
 """
 手动实现nms算法，目标检测中的基础算法
@@ -57,6 +64,8 @@ def stackImages(imgArray,scale = 0.5,lables=[]):
 """
 box = x,y,w,h
 """
+
+
 def IOU(bbox1, bbox2):
     if bbox1[0] < bbox2[0]:
         box1 = bbox1
@@ -72,7 +81,8 @@ def IOU(bbox1, bbox2):
     iou = oS / (S1 + S2 - oS)
     return iou
 
-def nms(bboxes, confidence, threshold = 0.5):
+
+def nms(bboxes, confidence, threshold=0.5):
     resIndex = []
     boxes = list(bboxes).copy()
 
@@ -92,6 +102,7 @@ def nms(bboxes, confidence, threshold = 0.5):
         resIndex.append(aimIndex)
     return resIndex
 
+
 """
  图像边缘特征提取
  步骤：
@@ -103,7 +114,9 @@ def nms(bboxes, confidence, threshold = 0.5):
 CONTOURTS_NONE = 0
 CONTOURTS_LINE = 1
 CONTOURTS_POINTS_LINE = 2
-def getContours(img, thres = [100, 200], contourType = CONTOURTS_LINE, minArea = 1000, filterPoints = 0):
+
+
+def getContours(img, thres=[100, 200], contourType=CONTOURTS_LINE, minArea=1000, filterPoints=0):
     """
     :param img:  原始图像
     :param thres:  双阈值
@@ -134,7 +147,7 @@ def getContours(img, thres = [100, 200], contourType = CONTOURTS_LINE, minArea =
             # 计算轮廓周长
             peri = cv2.arcLength(contour, True)
             # 利用多边形近似边缘，返回近似多边形的顶点
-            approx = cv2.approxPolyDP(contour, 0.02*peri, True)
+            approx = cv2.approxPolyDP(contour, 0.02 * peri, True)
             # 得到近似多边形的最小边缘矩形
             bbox = cv2.boundingRect(approx)
 
@@ -154,16 +167,38 @@ def getContours(img, thres = [100, 200], contourType = CONTOURTS_LINE, minArea =
     if contourType != CONTOURTS_NONE and len(resContours) != 0:
         for contourTulpe in resContours:
             if contourType == CONTOURTS_LINE:
-                imgContours = cv2.drawContours(imgContours, contourTulpe[4], -1, (0,255,0),10)
-            elif contourType == CONTOURTS_POINTS:
+                imgContours = cv2.drawContours(imgContours, contourTulpe[4], -1, (0, 255, 0), 10)
+            elif contourType == CONTOURTS_POINTS_LINE:
                 imgContours = cv2.drawContours(imgContours, contourTulpe[2], -1, (0, 255, 0), 20)
                 imgApprox = drawRect(imgContours, contourTulpe[2], 3)
     return resContours, imgContours
 
 
 """
-根据多边形的顶点, 连接多边形
 因为读取的四边形四个点不确定，顺序不总是一样的，所以需要先将其整理统一
+判断四个角的顺序：
+1   2
+3   4
+"""
+def reOrder(approxPoints):
+    """
+    :param approxPoints: 多边形的近似顶点 (由函数getContours得到)
+    :return:
+    """
+    newPoints = np.zeros_like(approxPoints)
+    points = approxPoints.reshape((4, 2))
+    add = points.sum(1)
+    newPoints[0] = points[np.argmin(add)]
+    newPoints[3] = points[np.argmax(add)]
+    diff = np.diff(points, axis=1)
+    print(diff)
+    newPoints[1] = points[np.argmin(diff)]
+    newPoints[2] = points[np.argmax(diff)]
+    return newPoints
+
+
+"""
+根据多边形的顶点, 连接多边形
 """
 def drawRect(img, approxPoints, thickness):
     """
@@ -172,19 +207,35 @@ def drawRect(img, approxPoints, thickness):
     :param thickness:  线宽
     :return:
     """
-    # 判断四个角的顺序：
-    #  1   4
-    # 2   3
-    # newPoints = np.zeros_like(approxPoints)
     points = approxPoints.reshape((4,2))
-    # add = points.sum(1)
-    # newPoints[0] = points[np.argmin(add)]
-    # newPoints[2] = points[np.argmax(add)]
-    # diff = np.diff(points, axis=1)
-    # print(diff)
-    # newPoints[1] = points[np.argmin(diff)]
-    # newPoints[3] = points[np.argmax(diff)]
-    for i in range(len(points)-1):
-        cv2.line(img, points[i], points[i+1], (0,255,0), thickness)
+    for i in range(len(points) - 1):
+        cv2.line(img, points[i], points[i + 1], (0, 255, 0), thickness)
     cv2.line(img, points[-1], points[0], (0, 255, 0), thickness)
-    return img
+    return img, points
+
+
+"""
+按照points选中的矩形裁剪图片，并输出成一个图像
+"""
+def transRectSelectedImg(img, approxPoints, w, h, pad = 20):
+    """
+    :param img: 需要转换的图像
+    :param approxPoints:  多边形的近似顶点
+    :param w:  转换后图像的宽
+    :param h:   转换后图像的高
+    :param pad:     边缘噪声裁剪
+    :return:
+    """
+    points = reOrder(approxPoints)
+    points = points.reshape((4, 2))
+    pts1 = np.float32(points)
+    pts2 = np.float32([[0, 0], [w, 0], [0, h], [w, h]])
+
+    matrix = cv2.getPerspectiveTransform(pts1, pts2)
+    imgTrans = cv2.warpPerspective(img, matrix, (w, h))
+    imgTrans = imgTrans[pad:imgTrans.shape[0]-pad, pad:imgTrans.shape[1]- pad]
+
+    return imgTrans
+
+def distance(plt1, plt2):
+    return ((plt2[0] - plt1[0]) ** 2 + (plt2[1] - plt1[1]) ** 2) ** 0.5
