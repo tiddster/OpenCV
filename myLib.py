@@ -198,7 +198,7 @@ def reOrder(approxPoints):
 
 
 """
-根据多边形的顶点, 连接多边形
+根据四边形的顶点, 连接四边形
 """
 def drawRect(img, approxPoints, thickness):
     """
