@@ -14,7 +14,7 @@ wImg, hImg = int(210 * scale), int(297 * scale)
 #####################################
 
 while True:
-    #img = cv2.imread('222.png')
+    #img = cv2.imread('RUM.png')
     success, img = capture.read()
     img = cv2.resize(img, (wImg, hImg))
 
