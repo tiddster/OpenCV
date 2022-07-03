@@ -191,10 +191,9 @@ def reOrder(approxPoints):
     newPoints[0] = points[np.argmin(add)]
     newPoints[3] = points[np.argmax(add)]
     diff = np.diff(points, axis=1)
-    print(diff)
     newPoints[1] = points[np.argmin(diff)]
     newPoints[2] = points[np.argmax(diff)]
-    return newPoints
+    return newPoints.reshape((4, 2))
 
 
 """
@@ -237,5 +236,24 @@ def transRectSelectedImg(img, approxPoints, w, h, pad = 20):
 
     return imgTrans
 
+
 def distance(plt1, plt2):
     return ((plt2[0] - plt1[0]) ** 2 + (plt2[1] - plt1[1]) ** 2) ** 0.5
+
+
+def getXYWHAccordingTo4Points(points):
+    """
+    根据矩阵四个点算出宽高
+    先用mylib中函数将points重新排序为：
+    1    2
+    3   4
+    再进行计算
+    :param points:  矩阵的四个点
+    :return: 宽和高
+    """
+    points = reOrder(points)
+    x1, x2, x3, x4 = points[:, 0]
+    w = (x2 + x4 - x3 - x1) // 2
+    y1, y2, y3, y4 = points[:, 1]
+    h = (y3 + y4 - y2 - y1) // 2
+    return x1,  y1, w,  h
