@@ -1,5 +1,26 @@
 import cv2
 import numpy as np
+import os
+"""
+读取文件夹所有图片以及图片的名字
+"""
+def readImagesAndNamesFromLib(dirPath, resizes = []):
+    """
+    :param dirPath:   文件夹的名字
+    :param resizes:     可以设置读取图像的宽、高，默认不设置
+    :return:
+    """
+    imagesLib = os.listdir(dirPath)
+    images = []
+    names = []
+    for imageName in imagesLib:
+        image = cv2.imread(f'{dirPath}\\{imageName}')
+        if len(resizes) != 0:
+            image = cv2.resize(image, (resizes[0], resizes[1]))
+        images.append(image)
+        names.append(imageName.split('.')[0])
+    return images, names
+
 
 """
 用于opencv一个窗口展示多个图像
