@@ -1,10 +1,13 @@
 import cv2
 import numpy as np
 import os
+
 """
 读取文件夹所有图片以及图片的名字
 """
-def readImagesAndNamesFromLib(dirPath, resizes = []):
+
+
+def readImagesAndNamesFromLib(dirPath, resizes=[]):
     """
     :param dirPath:   文件夹的名字
     :param resizes:     可以设置读取图像的宽、高，默认不设置
@@ -201,6 +204,8 @@ def getContours(img, thres=[100, 200], contourType=CONTOURTS_LINE, minArea=1000,
 1   2
 3   4
 """
+
+
 def reOrder(approxPoints):
     """
     :param approxPoints: 多边形的近似顶点 (由函数getContours得到)
@@ -220,6 +225,8 @@ def reOrder(approxPoints):
 """
 根据四边形的顶点, 连接四边形
 """
+
+
 def drawRect(img, approxPoints, thickness):
     """
     :param img:  原始图像
@@ -227,7 +234,7 @@ def drawRect(img, approxPoints, thickness):
     :param thickness:  线宽
     :return:
     """
-    points = approxPoints.reshape((4,2))
+    points = approxPoints.reshape((4, 2))
     for i in range(len(points) - 1):
         cv2.line(img, points[i], points[i + 1], (0, 255, 0), thickness)
     cv2.line(img, points[-1], points[0], (0, 255, 0), thickness)
@@ -237,7 +244,9 @@ def drawRect(img, approxPoints, thickness):
 """
 按照points选中的矩形裁剪图片，并输出成一个图像
 """
-def transRectSelectedImg(img, approxPoints, w, h, pad = 20):
+
+
+def transRectSelectedImg(img, approxPoints, w, h, pad=20):
     """
     :param img: 需要转换的图像
     :param approxPoints:  多边形的近似顶点
@@ -253,7 +262,7 @@ def transRectSelectedImg(img, approxPoints, w, h, pad = 20):
 
     matrix = cv2.getPerspectiveTransform(pts1, pts2)
     imgTrans = cv2.warpPerspective(img, matrix, (w, h))
-    imgTrans = imgTrans[pad:imgTrans.shape[0]-pad, pad:imgTrans.shape[1]- pad]
+    imgTrans = imgTrans[pad:imgTrans.shape[0] - pad, pad:imgTrans.shape[1] - pad]
 
     return imgTrans
 
@@ -277,4 +286,4 @@ def getXYWHAccordingTo4Points(points):
     w = (x2 + x4 - x3 - x1) // 2
     y1, y2, y3, y4 = points[:, 1]
     h = (y3 + y4 - y2 - y1) // 2
-    return x1,  y1, w,  h
+    return x1, y1, w, h
