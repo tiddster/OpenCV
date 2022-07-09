@@ -1,3 +1,5 @@
+import pickle
+
 import numpy as np
 import cv2
 import os
@@ -8,7 +10,7 @@ from keras.preprocessing.image import ImageDataGenerator
 from keras.utils.np_utils import to_categorical
 
 from keras.models import Sequential
-from keras.layers import  Dense, Dropout, Flatten
+from keras.layers import Dense, Dropout, Flatten
 from keras.optimizers import Adam
 from keras.layers.convolutional import Conv2D, MaxPooling2D
 
@@ -61,7 +63,6 @@ plt.ylabel("Number of Images")
 plt.xlabel("Class Names")
 plt.show()
 
-
 """
 数据清晰：预处理，灰度化和正则化
 """
@@ -93,14 +94,16 @@ dataGen = ImageDataGenerator(width_shift_range=0.1,
                              rotation_range=10)
 dataGen.fit(x_train)
 
+# 将数据转换为onehot编码
 y_train = to_categorical(y_train, len(numsOfSample))
 y_test = to_categorical(y_test, len(numsOfSample))
 y_cross = to_categorical(y_cross, len(numsOfSample))
 
-
 """
 搭建网络
 """
+
+
 def netModel():
     numOfFilters = 60
     sizeOfFilter1 = (5, 5)
@@ -111,10 +114,10 @@ def netModel():
     model = Sequential()
     model.add((Conv2D(numOfFilters, sizeOfFilter1,
                       input_shape=(imageDimensions[0], imageDimensions[1], 1), activation='relu')))
-    model.add((Conv2D(numOfFilters, sizeOfFilter1,activation='relu')))
+    model.add((Conv2D(numOfFilters, sizeOfFilter1, activation='relu')))
     model.add(MaxPooling2D(pool_size=sizeOfPool))
-    model.add((Conv2D(numOfFilters//2, sizeOfFilter2, activation='relu')))
-    model.add((Conv2D(numOfFilters//2, sizeOfFilter2, activation='relu')))
+    model.add((Conv2D(numOfFilters // 2, sizeOfFilter2, activation='relu')))
+    model.add((Conv2D(numOfFilters // 2, sizeOfFilter2, activation='relu')))
     model.add(MaxPooling2D(pool_size=sizeOfPool))
     model.add(Dropout(0.5))
 
@@ -125,5 +128,38 @@ def netModel():
     model.compile(Adam(lr=0.001), loss='categorical_crossentropy', metrics=['accuracy'])
     return model
 
+
 model = netModel()
 print(model.summary())
+
+"""
+开始训练模型
+"""
+#####################################
+# 训练参数
+batch_size = 32
+epochs = 3
+stepsPerEpoch = x_train.shape[0] // batch_size
+#####################################
+
+history = model.fit_generator(dataGen.flow(x_train, y_train, batch_size=batch_size),
+                              steps_per_epoch=stepsPerEpoch,
+                              epochs=epochs,
+                              validation_data=(x_cross, y_cross))
+
+plt.figure(1)
+plt.plot(history.history['loss'])
+plt.plot(history.history['val_loss'])
+plt.legend(['training', 'cross'])
+plt.show()
+
+score = model.evaluate(x_test, y_test, verbose=0)
+print(f"Test Score  {score[0]}")
+print(f"Test Accuracy {score[1]}")
+
+"""
+模型导出
+"""
+pickle_out = open("model_trained.p", "wb")
+pickle.dump(model, pickle_out)
+pickle_out.close()
